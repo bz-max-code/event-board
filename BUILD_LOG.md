@@ -102,3 +102,32 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 - **System fonts** with no web-font dependency, to keep first paint fast and avoid a font flash on the static landing page.
 
 **Tested:** `tsc`, `eslint` and unit tests (12/12) pass. `vite build` succeeds and the prerender wrote `/`. The only warning is the >500 kB chunk, which is the scaffold's SDK bundle and not this app's code.
+
+## Step 6 — Tests
+
+**What:**
+- `tests/smoke.spec.ts`: the board renders for signed-out visitors, and `/my-registrations`, `/organizer`, `/manage` and `/people` show the sign-in gate with none of their protected content in the DOM.
+- `tests/api.spec.ts`:
+  - Every action returns 401 without sign-in.
+  - A guest gets "Only organizers…" from each organizer action.
+  - With an organizer:
+    - Two guests race for a 1-seat session and get exactly one confirmed and one waitlisted.
+    - A duplicate registration is refused.
+    - A guest can't cancel someone else's registration.
+    - A waitlisted guest can't be checked in, but a confirmed one can.
+    - Capacity can't drop below the confirmed count, and raising it promotes the waitlist.
+    - A session with registrations can't be deleted.
+    - Owners can cancel their own registration.
+- `tests/collab.spec.ts`: a three-browser flow (organizer, Guest A, Guest B) on a 1-seat session:
+  - Live bar 0/1 → A registers → B sees 1/1 and "Join waitlist" live → B joins → A sees "Full · 1 on waitlist" live.
+  - B's own list shows only B's registration, and B gets "Organizers only" on the dashboard.
+  - The organizer sees both rows, sees check-in disabled for the waitlisted guest, and checks A in; A sees "Checked in" live.
+  - A cancels → B is promoted to "Registered" live, both on B's page and on the dashboard.
+- `tests/helpers/board.ts`: `actionAs(page, …)` calls actions with the page's own session JWT, plus helpers for seeding and cleanup. Test data is prefixed `__test-…__` and removed in `finally`.
+- Created 3 test accounts in the local pool: "Organizer", "Guest A", "Guest B" (`@deepspace.test`, random passwords stored only in `~/.deepspace/test-accounts.json`). `organizer-1@` was already taken globally, so the organizer address has a random suffix.
+
+**Decisions / tradeoffs:**
+- **No test backdoor for the organizer role.** The only way to become admin is for an existing admin to promote you. The local debug `set-role` endpoint also requires an admin. Specs that need an organizer check the role with a harmless probe and **skip with instructions** until the owner promotes "Organizer" once on `/people`. The promotion persists in the local Durable Object.
+- The race test drives real concurrent requests, not mocks. It checks the uniqueness-constraint design from step 1.
+
+**Tested:** `npx deepspace test run all` → **23 passed, 2 skipped**. All 12 unit tests passed. The 2 skipped are the organizer-dependent specs, which are waiting for the one-time promotion. No app registration, push or deploy took place.
