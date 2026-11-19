@@ -147,3 +147,24 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 **Why:** After "Organizer" was promoted, the full flow ran for the first time and failed with 2 cards where the test expected 1. A read-only look at the local database showed both cards were Guest B's own: the test session plus "Test Night", left over from manual testing. **This was not a leak.** The test wrongly assumed the account started with no registrations. The leftover manual-testing data was left as it was.
 
 **Tested:** `npx deepspace test run all --port 5180` → **25 passed, 0 skipped, 0 failed**, plus the 12/12 unit tests.
+
+## Step 7 — First deploy (partially failed: serving, but the release isn't recorded)
+
+**Live URL:** https://event-board.app.space
+
+**Before deploying:**
+- The working tree was clean, and local `main` matched `origin/main` on GitHub.
+- The only remote was `origin` → `github.com/bz-max-code/event-board`.
+- `deepspace status` reported `sourceInference: github`.
+
+**What happened:**
+1. `npx deepspace deploy` built the app, uploaded 24 assets and **permanently claimed GitHub source**. `deepspace app source` now reports `{ provider: github, repository: bz-max-code/event-board }`, revision 1, as intended.
+2. The deploy then failed with `release_reconciliation_pending`: *"Cloudflare activation may have completed, but its release record is not yet reconciled … could not list script secrets (CF 404). Rerun deploy without changing its inputs."*
+3. Rerunning the same deploy with nothing changed, 3 times over about 10 minutes, was refused each time with `release_in_progress` ("Another deploy is already activating … committing now").
+4. `deepspace releases` still shows **0 releases**. `deepspace logs` answers `app_not_deployed`, and `deepspace status` shows `live: null`.
+
+**What is actually live:** https://event-board.app.space serves this build. `/`, `/home` and `/api/auth/ok` all return 200, and the page title is "Doorlist | Event registration and check-in".
+
+**Decision:** Stopped retrying. The platform's release record disagrees with what Cloudflare is serving, and the refusals offer no further remedy beyond "run the same deploy again", which keeps being refused. The worker logs can't be read until the release is recorded. Rollback is unavailable until then too, because there is no recorded release to roll back to.
+
+**Tested:** HTTP checks on the live URL (above). The app hasn't yet been checked end to end in the live environment: sign-in, registration and real-time updates are untested there.
