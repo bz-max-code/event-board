@@ -139,3 +139,11 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 **Why:** A user's row in `users`, which is what the People page lists, is only created when the account's live connection to the app opens. The probe ran before that, saw "not an organizer", and skipped the test. The browser then closed, so the Organizer account never got a row and couldn't be promoted. Ports 5173 and 5180 share the same local database (`.wrangler/state`), so the port wasn't the problem. I signed the account in once on the 5173 dev server so it now has a row. Promoting it is still a manual step done by the owner.
 
 **Tested:** Read the local `users` table (read-only): the Organizer row now exists with role `member`. ESLint is clean.
+
+## Fix — Privacy assertion counted the guest's other registrations
+
+**What:** The three-browser test's check that "Guest B only sees their own registration" now counts only cards for the test's own session, and also checks that the card shows "Waitlist #1".
+
+**Why:** After "Organizer" was promoted, the full flow ran for the first time and failed with 2 cards where the test expected 1. A read-only look at the local database showed both cards were Guest B's own: the test session plus "Test Night", left over from manual testing. **This was not a leak.** The test wrongly assumed the account started with no registrations. The leftover manual-testing data was left as it was.
+
+**Tested:** `npx deepspace test run all --port 5180` → **25 passed, 0 skipped, 0 failed**, plus the 12/12 unit tests.

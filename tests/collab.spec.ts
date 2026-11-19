@@ -184,11 +184,15 @@ test.describe('event board (3 users)', () => {
       await expect(cardB.getByTestId('my-status')).toHaveText('Waitlist #1', { timeout: 15_000 })
       await expect(cardA.getByTestId('capacity-status')).toHaveText('Full · 1 on waitlist', { timeout: 15_000 })
 
-      // Privacy: B only sees their own registration and can't open the dashboard.
+      // Privacy: B's list shows only B's own registration for this session (A holds
+      // the other one), and B can't open the dashboard. Scoped to this test's
+      // session so leftover registrations from manual testing don't matter.
       await b.page.goto('/my-registrations')
-      await expect(b.page.locator('[data-testid="my-registrations"] [data-testid="session-card"]')).toHaveCount(1, {
-        timeout: 15_000,
-      })
+      const bCards = b.page
+        .locator('[data-testid="my-registrations"] [data-testid="session-card"]')
+        .filter({ hasText: sessionTitle })
+      await expect(bCards).toHaveCount(1, { timeout: 15_000 })
+      await expect(bCards.getByTestId('my-status')).toHaveText('Waitlist #1')
       await b.page.goto('/organizer')
       await expect(b.page.getByTestId('organizers-only')).toBeVisible({ timeout: 15_000 })
 
