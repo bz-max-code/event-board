@@ -47,6 +47,9 @@ export async function actionAs<T = Record<string, unknown>>(
 
 /** True when the page's user is an organizer (admin). Probes an organizer-only action. */
 export async function isOrganizer(page: Page): Promise<boolean> {
+  // Wait for the signed-in shell first: the users row (what /people lists)
+  // is created when the records socket connects, so a skip must not race it.
+  await page.getByTestId('nav-user-name').waitFor({ timeout: 20_000 })
   const r = await actionAs(page, 'createSession', {})
   return !(r.success === false && /Only organizers/.test(r.error))
 }

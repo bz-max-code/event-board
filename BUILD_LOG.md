@@ -131,3 +131,11 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 - The race test drives real concurrent requests, not mocks. It checks the uniqueness-constraint design from step 1.
 
 **Tested:** `npx deepspace test run all` → **23 passed, 2 skipped**. All 12 unit tests passed. The 2 skipped are the organizer-dependent specs, which are waiting for the one-time promotion. No app registration, push or deploy took place.
+
+## Fix — Organizer test account never appeared on /people
+
+**What:** `isOrganizer()` in `tests/helpers/board.ts` now waits for the signed-in nav before probing the role.
+
+**Why:** A user's row in `users`, which is what the People page lists, is only created when the account's live connection to the app opens. The probe ran before that, saw "not an organizer", and skipped the test. The browser then closed, so the Organizer account never got a row and couldn't be promoted. Ports 5173 and 5180 share the same local database (`.wrangler/state`), so the port wasn't the problem. I signed the account in once on the 5173 dev server so it now has a row. Promoting it is still a manual step done by the owner.
+
+**Tested:** Read the local `users` table (read-only): the Organizer row now exists with role `member`. ESLint is clean.
