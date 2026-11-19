@@ -50,4 +50,4 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 - **Event and session deletion is refused while children exist.** This avoids silent cascades that would wipe registrations.
 - **Known edge:** if a worker crashes between creating the registration and claiming its spot, the next settle on that session repairs it. Until then the guest's row shows "Processing…".
 
-**Tested:** Unit tests in `src/lib/queue.test.ts` cover status derivation, occupancy, waitlist place, compaction (including a no-collision property check) and the capacity floor: 12/12 tests pass. `tsc` and `eslint` are clean. The action endpoints get Playwright API tests in step 6, once the dev server runs.
+**Tested:** Unit tests in `src/lib/queue.test.ts` cover status derivation, occupancy, waitlist place, compaction (including a no-collision property check) and the capacity floor (8 tests). The whole unit suite passes, 12/12. `tsc` and `eslint` are clean. The action endpoints get Playwright API tests in step 6, once the dev server runs.
