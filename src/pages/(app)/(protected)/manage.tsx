@@ -103,6 +103,7 @@ function Manage() {
               className="rounded-xl border border-border bg-card"
               data-testid="manage-event"
               data-event-title={ev.data.title}
+              data-event-id={ev.recordId}
             >
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4">
                 <div>

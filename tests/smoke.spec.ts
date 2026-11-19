@@ -68,4 +68,19 @@ test.describe('Smoke tests', () => {
     await waitForApp(page)
     await expect(page.locator('text=404')).toBeVisible()
   })
+
+  test('board renders for signed-out visitors', async ({ page }) => {
+    await page.goto('/home')
+    await expect(page.getByRole('heading', { name: 'Events', level: 1 })).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('[data-testid="auth-overlay"]')).toHaveCount(0)
+  })
+
+  for (const path of ['/my-registrations', '/organizer', '/manage', '/people']) {
+    test(`${path} is gated when signed out`, async ({ page }) => {
+      await page.goto(path)
+      await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible({ timeout: 15000 })
+      await expect(page.getByTestId('registrations-table')).toHaveCount(0)
+      await expect(page.getByTestId('my-registrations')).toHaveCount(0)
+    })
+  }
 })

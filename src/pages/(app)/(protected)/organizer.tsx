@@ -223,7 +223,7 @@ function Dashboard() {
             </thead>
             <tbody className="divide-y divide-border">
               {rows.map((r) => (
-                <tr key={r.id} data-testid="registration-row" data-guest-email={r.email}>
+                <tr key={r.id} data-testid="registration-row" data-guest-email={r.email} data-registration-id={r.id}>
                   <td className="px-4 py-3">
                     <div className="font-medium text-foreground">{r.name}</div>
                     <div className="text-xs text-muted-foreground">{r.email}</div>
