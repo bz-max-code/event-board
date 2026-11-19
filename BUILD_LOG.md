@@ -69,3 +69,23 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 - Added `--color-ticket*` tokens for the meter. Full theming comes in step 5.
 
 **Tested:** `tsc` and `eslint` are clean, and the unit suite passes 12/12. The UI is checked in the real browser in step 6 (smoke and multi-user e2e).
+
+## Step 4 — Organizer UI
+
+**What:**
+- `/organizer` is the check-in dashboard:
+  - Live totals for confirmed, waitlisted and checked in (checked-in shown as x / confirmed), with a capacity bar for each session.
+  - A table of all registrations with guest name and email, session and status (Confirmed / Waitlist #n / Checked in).
+  - Filters by event, session and status, plus search by name or email.
+  - **Check in / Undo** buttons, and **Remove**, which goes through the `cancel` action and promotes the next person on the waitlist.
+- `/manage` handles creating and editing events (direct `useMutations`, confirmed variants) and creating, editing and deleting sessions (server actions). The capacity field shows a hint and refuses values below the confirmed count.
+- `/people` lets an organizer switch any user between guest and organizer with `useUsers().setRole`.
+- `OrganizerOnly` is a UI gate on these pages. Nav entries are shown only for the `admin` role.
+
+**Decisions / tradeoffs:**
+- **The UI gate is only for convenience.** The real boundary is on the server. A guest's socket never receives other people's registrations or emails, since emails only go to admins. Every organizer action also re-checks `role === 'admin'` on the server.
+- **Organizer = `admin`, guest = `member`.** These are DeepSpace's built-in roles, so no custom role system is needed. `users.role` is a protected column, and `setRole` is refused unless the caller is already an admin. The app owner is always pinned to admin, so the app can never end up with no organizers. On the People page you can't change your own role, which avoids accidentally locking yourself out.
+- **Check-in is disabled for waitlisted guests** in the UI, and the `setCheckIn` action refuses it too.
+- **Deletes that would orphan data are refused** rather than cascaded, with a clear message ("Delete the event’s sessions first").
+
+**Tested:** `tsc` and `eslint` are clean. These pages are exercised in the browser by the step 6 e2e specs.
