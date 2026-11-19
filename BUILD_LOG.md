@@ -51,3 +51,21 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 - **Known edge:** if a worker crashes between creating the registration and claiming its spot, the next settle on that session repairs it. Until then the guest's row shows "Processing…".
 
 **Tested:** Unit tests in `src/lib/queue.test.ts` cover status derivation, occupancy, waitlist place, compaction (including a no-collision property check) and the capacity floor (8 tests). The whole unit suite passes, 12/12. `tsc` and `eslint` are clean. The action endpoints get Playwright API tests in step 6, once the dev server runs.
+
+## Step 3 — Guest UI
+
+**What:**
+- `src/hooks/useBoard.ts`: one hook that subscribes to `events`, `sessions`, `spots` and `registrations` and works out each session's occupancy and the caller's own registrations with their status.
+- `src/components/CapacityBar.tsx`: an accessible meter (`role="meter"`) showing seats taken / capacity, seats left or the waitlist length. Its colour moves from open → nearly full (≥75%) → full.
+- `src/components/SessionCard.tsx`: a session row with the capacity bar and the caller's control: **Register**, or **Join waitlist** when full. Once registered it shows a **Registered / Waitlist #n / Checked in** badge with a **Cancel / Leave waitlist** button (with a confirm dialog). Signed-out visitors get the sign-in overlay when they try to register.
+- `/home` is now the events board. It stays under `(app)/` but not `(protected)/`, so signed-out visitors can browse it.
+- `/my-registrations` (sign-in required) lists the caller's own registrations.
+- `src/lib/actions.ts` is a small client wrapper for `POST /api/actions/:name` with the user's JWT. Nav entries were added.
+
+**Decisions / tradeoffs:**
+- **No optimistic UI.** After an action the UI waits for the realtime broadcast. The server decides confirmed vs waitlisted, so showing a guess first could flash the wrong status. Toasts confirm the outcome from the action's response.
+- **Guest privacy is enforced by the server, not the UI.** A guest's socket only ever receives their own `registrations` rows. The `userId` filter in `useBoard().mine` is only there so an organizer's personal view isn't cluttered with everyone else's rows.
+- **"Processing…" badge.** It covers the brief moment between the registration row arriving and its spot arriving. These are two separate broadcasts.
+- Added `--color-ticket*` tokens for the meter. Full theming comes in step 5.
+
+**Tested:** `tsc` and `eslint` are clean, and the unit suite passes 12/12. The UI is checked in the real browser in step 6 (smoke and multi-user e2e).

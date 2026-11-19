@@ -59,6 +59,11 @@
   --color-info: #3b82f6;
   --color-info-foreground: #ffffff;
 
+  /* Capacity meter — open / nearly full / full. Themes may override. */
+  --color-ticket: #10b981;
+  --color-ticket-low: #f59e0b;
+  --color-ticket-full: #ef4444;
+
   /*
    * Shadows — slate (default). Each theme in themes.css tunes these.
    *
