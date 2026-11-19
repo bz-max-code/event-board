@@ -89,3 +89,16 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 - **Deletes that would orphan data are refused** rather than cascaded, with a clear message ("Delete the event’s sessions first").
 
 **Tested:** `tsc` and `eslint` are clean. These pages are exercised in the browser by the step 6 e2e specs.
+
+## Step 5 — Design
+
+**What:**
+- **"Doorlist" theme** (`src/themes.css`, `src/themes.ts`, first-paint colour in `index.html`): warm paper background, ink text, a deep teal primary, and green → amber → brick for the capacity meter.
+- **Static landing page** (`/`) replaces the scaffold placeholder. It has a headline, a ticket-stub illustration of the live capacity bar (filled with a CSS-only animation that respects reduced motion), and a three-step explainer. It stays static and prerendered, with no auth fetch and no WebSocket.
+- Brand name `Doorlist` (`src/brand.ts`) is used in the nav and page titles. `APP_NAME` is still the deploy name and subdomain (`event-board`). SEO title and description are filled in.
+
+**Decisions / tradeoffs:**
+- **Light, warm theme** rather than the scaffold's dark slate. A check-in board gets used on phones in bright venues, so contrast in daylight matters more than a dark aesthetic.
+- **System fonts** with no web-font dependency, to keep first paint fast and avoid a font flash on the static landing page.
+
+**Tested:** `tsc`, `eslint` and unit tests (12/12) pass. `vite build` succeeds and the prerender wrote `/`. The only warning is the >500 kB chunk, which is the scaffold's SDK bundle and not this app's code.

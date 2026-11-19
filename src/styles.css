@@ -237,3 +237,9 @@
     touch-action: manipulation;
   }
 }
+
+/* Landing: the illustrative capacity bar fills once on load (CSS only, so the
+   prerendered HTML shows the final state when motion is reduced). */
+.landing-fill { width: 90%; animation: landing-fill 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes landing-fill { from { width: 8%; } to { width: 90%; } }
+@media (prefers-reduced-motion: reduce) { .landing-fill { animation: none; } }

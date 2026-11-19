@@ -44,3 +44,36 @@
   --color-shell: #fafafa;
   --color-shell-panel: #ffffff;
 }
+
+/* Doorlist — the app's own theme. Warm paper, ink type, a deep teal primary
+ * (calm "you're in" color) and amber/brick for nearly-full and full. */
+[data-theme="doorlist"] {
+  color-scheme: light;
+  --color-background: #f7f4ee;
+  --color-foreground: #1c1a17;
+  --color-card: #fffdf9;
+  --color-card-foreground: #1c1a17;
+  --color-popover: #fffdf9;
+  --color-popover-foreground: #1c1a17;
+  --color-primary: #0f5c55;
+  --color-primary-foreground: #f7f4ee;
+  --color-secondary: #ece6db;
+  --color-secondary-foreground: #1c1a17;
+  --color-muted: #ebe5da;
+  --color-muted-foreground: #6b645a;
+  --color-accent: #e4ddd0;
+  --color-accent-foreground: #1c1a17;
+  --color-destructive: #b3412e;
+  --color-destructive-foreground: #fffdf9;
+  --color-border: #ddd5c7;
+  --color-input: #d4cbbb;
+  --color-ring: #0f5c55;
+  --color-ticket: #1f8a70;
+  --color-ticket-low: #d08a1e;
+  --color-ticket-full: #b3412e;
+  --radius: 0.625rem;
+  --shadow-card: 0 1px 2px 0 rgba(60, 45, 20, 0.05);
+  --shadow-card-hover: 0 2px 8px 0 rgba(60, 45, 20, 0.08);
+  --color-shell: #f1ece3;
+  --color-shell-panel: #fffdf9;
+}
