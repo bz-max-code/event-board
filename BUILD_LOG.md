@@ -29,3 +29,25 @@ A short entry per build step: what was done, decisions/tradeoffs, and what was t
 - Only one `uniqueOn` constraint is allowed per collection. That is why the seat-locking lives in `spots` rather than on `registrations`.
 
 **Tested:** Added a unit test that runs the SDK schema lint (`src/schemas.lint.test.ts`); it passes with zero warnings. `tsc --noEmit` is clean.
+
+## Step 2 — Server actions and queue logic
+
+**What:**
+- `src/lib/queue.ts`: pure functions shared by the worker and the UI: `statusFor`, `nextPosition`, `occupancy`, `waitlistPlace`, `compactionMoves`, `minimumCapacity`.
+- `src/actions/index.ts`: `register`, `cancel`, `setCheckIn`, `createSession`, `updateSession`, `deleteSession`, `deleteEvent`.
+- Moved the scaffold's `createActionTools` into `src/server/action-tools.ts`, so actions can build a second tools instance that acts as the app owner.
+
+**How registration works:**
+1. Create the registration under the caller's identity. A duplicate is refused by `uniqueOn` and comes back as "already registered".
+2. Claim `max(position)+1` in `spots`. If another request took that position first, the uniqueness constraint refuses the write and the action retries, up to 8 times.
+3. Settle the session. Cancelling deletes the spot and the registration, then settles. Settling compacts positions to 1..n in order, so the waitlist head moves into the freed seat.
+
+**Decisions / tradeoffs:**
+- **Every action authorizes explicitly**, because actions bypass RBAC. Organizer actions check `resolveAppRole(...) === 'admin'`. `cancel` allows the registration's owner or an organizer. Someone else's id gets the same "not found" answer, so it doesn't confirm the id exists.
+- **Settling is idempotent and self-healing.** It removes orphan or duplicate spots, gives a spot to any registration missing one, and compacts. If a concurrent request makes a move fail on the uniqueness constraint, the move is skipped and the next settle finishes it. The proof that compaction never collides is in the `compactionMoves` doc comment, and a unit test checks it.
+- **Capacity can be lowered only down to the current confirmed count**, so no confirmed guest is ever bumped back to the waitlist. Raising capacity promotes waitlisted guests automatically.
+- **Check-in is allowed only for confirmed guests** and can be undone.
+- **Event and session deletion is refused while children exist.** This avoids silent cascades that would wipe registrations.
+- **Known edge:** if a worker crashes between creating the registration and claiming its spot, the next settle on that session repairs it. Until then the guest's row shows "Processing…".
+
+**Tested:** Unit tests in `src/lib/queue.test.ts` cover status derivation, occupancy, waitlist place, compaction (including a no-collision property check) and the capacity floor: 12/12 tests pass. `tsc` and `eslint` are clean. The action endpoints get Playwright API tests in step 6, once the dev server runs.
